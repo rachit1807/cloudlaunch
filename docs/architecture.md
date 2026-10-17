@@ -47,4 +47,4 @@ Without `DATABASE_URL`, development uses an ignored JSON file. Local writes are 
 
 Cloud Run builds the repository’s Dockerfile through Cloud Build and serves the resulting image. A runtime service account has Cloud SQL Client and scoped Secret Manager access. The PostgreSQL URL can use the Cloud SQL Unix socket at `/cloudsql/PROJECT:REGION:INSTANCE`; the service is explicitly attached to that instance.
 
-Infrastructure and live verification remain pending until the Google Cloud account allows access and the project is provisioned.
+Infrastructure and live verification remain pending until Google Cloud billing is activated and the project is provisioned.

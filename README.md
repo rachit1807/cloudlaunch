@@ -8,6 +8,8 @@
 
 A focused, responsive workspace for managing projects, preparing production checklists, and recording verified releases.
 
+[![Validate CloudLaunch](https://github.com/rachit1807/cloudlaunch/actions/workflows/ci.yml/badge.svg)](https://github.com/rachit1807/cloudlaunch/actions/workflows/ci.yml)
+
 [Features](#features) · [Quick start](#quick-start) · [Architecture](docs/architecture.md) · [Cloud deployment](docs/deployment.md) · [API](docs/api.md)
 
 <img src="https://skillicons.dev/icons?i=react,vite,js,nodejs,express,postgres,docker,gcp,githubactions,git&perline=10" alt="React, Vite, JavaScript, Node.js, Express, PostgreSQL, Docker, Google Cloud, GitHub Actions, Git" />
@@ -23,7 +25,7 @@ Deploying a Web Application to a Cloud Platform
 
 ## Deployment status
 
-The application is built and tested locally. Google Cloud Run and Cloud SQL deployment files are included. **A public live URL is pending Google Cloud account access and provisioning.** A local screenshot does not represent a live cloud deployment.
+The application is built and tested locally. Google Cloud Run and Cloud SQL deployment files are included. **A public live URL is pending Google Cloud billing activation and provisioning.** A local screenshot does not represent a live cloud deployment.
 
 Repository: [rachit1807/cloudlaunch](https://github.com/rachit1807/cloudlaunch)
 
