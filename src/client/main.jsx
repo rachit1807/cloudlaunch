@@ -132,6 +132,12 @@ function App() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+  function signOut() {
+    sessionStorage.removeItem("cloudlaunch-password");
+    sessionStorage.removeItem("cloudlaunch-demo");
+    // A fresh page also discards pending requests and private workspace state.
+    window.location.reload();
+  }
   function navigate(p) {
     setPage(p);
     setSearch("");
@@ -348,6 +354,9 @@ function App() {
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
               {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
+            </button>
+            <button className="sign-out" onClick={signOut}>
+              <LogOut size={16} /> {demo ? "Exit demo" : "Sign out"}
             </button>
             <span className="avatar small">{data.settings.owner[0]}</span>
           </div>
@@ -826,13 +835,10 @@ function App() {
                 {password && (
                   <button
                     className="text-button"
-                    onClick={() => {
-                      sessionStorage.removeItem("cloudlaunch-password");
-                      setPassword("");
-                    }}
+                    onClick={signOut}
                   >
                     <LogOut size={16} />
-                    Lock workspace
+                    Sign out
                   </button>
                 )}
               </section>
