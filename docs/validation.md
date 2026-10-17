@@ -1,20 +1,36 @@
 # Validation record
 
-## Verified locally
+## Local and continuous validation
 
-- API integration test: create, edit, delete, invalid input, HTTPS validation, release prerequisites, duplicate versions, persistence after reopening the store, password authentication, and deletion of related releases.
-- Production frontend compilation.
-- Dependency audit: no reported vulnerabilities at the time of installation.
-- Deployment script shell syntax.
-- Browser checks: project creation, rendered dashboard totals, desktop dark theme, desktop light theme, mobile navigation, project search and filtering, project editing, persistence after refresh, and mobile layout at 390 × 844.
-- Mobile document width matches the viewport; no horizontal overflow in the tested overview state.
+- API integration test passes: project creation, edit, delete, invalid input, HTTPS URL validation, release prerequisites, duplicate versions, persistence after reopening the store, password protection, and related release deletion.
+- Production frontend build passes.
+- Deployment scripts pass shell/JavaScript syntax checks.
+- Initial GitHub Actions run passed API tests, frontend compilation, and Docker build: [workflow run](https://github.com/rachit1807/cloudlaunch/actions/runs/39058147772).
+- Dependency audit reported no known vulnerabilities at installation time.
 
-- GitHub Actions API tests, frontend build, and Docker build passed for the initial commit: [workflow run](https://github.com/rachit1807/cloudlaunch/actions/runs/39058147772).
+## Verified on Render
 
-## Pending
+Live URL: [cloudlaunch-rachit.onrender.com](https://cloudlaunch-rachit.onrender.com).
 
-- Docker runtime startup is not tested locally because Docker is not installed.
-- PostgreSQL integration and Cloud SQL connectivity: requires cloud database provisioning.
-- Google Cloud deployment, authenticated live end-to-end tests, and restart persistence: two-step verification is enabled, but Google requires billing activation before Cloud Run can be enabled.
+- Render Docker deploy `dep-db9s0b3bc2fs73d197p0` became live from commit `9d054dc`.
+- Subsequent automatic deploy `dep-db9s3t2vcj2c739l8e90` became live from commit `cbad659`.
+- Frontend and PostgreSQL-backed `/api/health` smoke checks passed over HTTPS.
+- Unauthenticated `/api/workspace` returns 401.
+- Generated workspace password unlocks the UI.
+- Created a real CloudLaunch project with its actual live URL; saved and reloaded it successfully.
+- Saved all four verified readiness checks and recorded the actual first release as `v1.0.0`.
+- Saved project data persisted across the subsequent service deployment.
+- Release history shows the stored version, notes, environment, and live link.
+- Live mobile search and environment filters correctly show and clear empty results.
+- Mobile navigation, desktop light/dark themes, and the 390 × 844 layout were checked.
+- The mobile document width equals the 390-pixel viewport, with no horizontal overflow in the tested overview state.
+- Runtime logs confirm successful startup and a live service without database errors in the inspected startup entries.
 
-Screenshots in this repository are local browser captures. No cloud dashboard or live deployment result is claimed.
+## Limits
+
+- Authenticated destructive delete behavior was covered by local integration tests, not performed on the real retained CloudLaunch release record.
+- Database inspection through the hosted Render query tool is blocked by the existing database’s external IP restrictions. Those restrictions were preserved. The running app connects through the private network; its live health and persistence flows confirm database access.
+- There was no AWS, Google Cloud, or Azure deployment. Google Cloud billing setup presented a ₹15,000 payment request, so the user selected Render instead.
+- Render’s free web service sleeps when idle and shares workspace free-hour limits. The existing free PostgreSQL instance expires on 9 November 2026 unless upgraded.
+
+Live screenshots are stored in `docs/screenshots/live-*`; local design captures remain separately named. Secrets are not included in screenshots or repository files.

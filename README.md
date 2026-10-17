@@ -21,11 +21,12 @@ Deploying a Web Application to a Cloud Platform
 
 ---
 
-![CloudLaunch desktop dashboard in dark mode](docs/screenshots/desktop-dark.jpg)
+![CloudLaunch live dashboard in dark mode](docs/screenshots/live-desktop-dark.jpg)
 
 ## Deployment
 
-**Live application:** [cloudlaunch-rachit.onrender.com](https://cloudlaunch-rachit.onrender.com)  
+**Live application:** [cloudlaunch-rachit.onrender.com](https://cloudlaunch-rachit.onrender.com)
+
 **Health endpoint:** [/api/health](https://cloudlaunch-rachit.onrender.com/api/health)
 
 The app runs on a free Docker web service with managed PostgreSQL in Singapore.
@@ -201,11 +202,13 @@ cloudlaunch/
 
 ## Screenshots
 
-| Desktop light | Mobile light |
+| Desktop light | Mobile dark |
 | --- | --- |
-| ![Desktop light theme](docs/screenshots/desktop-light.jpg) | ![Mobile light theme](docs/screenshots/mobile-light.jpg) |
+| ![Desktop light theme](docs/screenshots/live-desktop-light.jpg) | ![Mobile dark theme](docs/screenshots/live-mobile-dark.jpg) |
 
-Local design previews are shown above. Verified Render deployment screenshots are included after live checks.
+![Live Render deployment dashboard](docs/screenshots/render-dashboard.jpg)
+
+The screenshots above show the verified live Render workspace. Additional local design captures remain in `docs/screenshots/`.
 
 ## Scope
 
