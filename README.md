@@ -21,7 +21,7 @@ Deploying a Web Application to a Cloud Platform
 
 ---
 
-![CloudLaunch live dashboard in dark mode](docs/screenshots/live-desktop-dark.jpg)
+![CloudLaunch project index in light mode](docs/screenshots/live-desktop-light.jpg)
 
 ## Deployment
 
@@ -101,7 +101,7 @@ Deleting a project also deletes its associated release history. The interface as
 
 | Layer | Tools | Purpose |
 | --- | --- | --- |
-| Interface | React, JavaScript, CSS, Lucide | Responsive dashboard, accessible forms, themes, and icons |
+| Interface | React, JavaScript, CSS, Lucide | Project index, dedicated workbooks, release timeline, accessible forms, and themes |
 | Build | Vite | Development server and production assets |
 | API | Node.js, Express, Helmet | Validation, routes, security headers, and static asset serving |
 | Database | PostgreSQL via `pg` | Durable workspace data and transactional updates |
@@ -210,7 +210,7 @@ cloudlaunch/
 
 ![Live Render deployment dashboard](docs/screenshots/render-dashboard.jpg)
 
-The screenshots above show the verified live Render workspace. Additional local design captures remain in `docs/screenshots/`.
+The screenshots above show the redesigned live Render demo. The interface uses a horizontal project index, dedicated project workbooks, a chronological release journal, and top navigation. Light mode uses warm paper and forest ink; dark mode uses deep green and copper accents. Mobile reorganizes the project rows and workbook sections into a single-column reading flow. Older design captures in this directory are historical.
 
 ## Scope
 
