@@ -99,16 +99,16 @@ Deleting a project also deletes its associated release history. The interface as
 
 ## Technology
 
-| Layer | Tools | Purpose |
-| --- | --- | --- |
-| Interface | React, JavaScript, CSS, Lucide | Project index, dedicated workbooks, release timeline, accessible forms, and themes |
-| Build | Vite | Development server and production assets |
-| API | Node.js, Express, Helmet | Validation, routes, security headers, and static asset serving |
-| Database | PostgreSQL via `pg` | Durable workspace data and transactional updates |
-| Containers | Docker | Repeatable frontend build and non-root production runtime |
-| Hosting | Render Docker web service and Render PostgreSQL | HTTPS container hosting, managed relational storage, and environment secrets |
-| Optional cloud target | Google Cloud Run, Cloud SQL, Secret Manager | Retained alternative deployment configuration |
-| Automation | GitHub Actions | API tests, production build, and Docker image validation |
+| Layer                 | Tools                                           | Purpose                                                                            |
+| --------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Interface             | React, JavaScript, CSS, Lucide                  | Project index, dedicated workbooks, release timeline, accessible forms, and themes |
+| Build                 | Vite                                            | Development server and production assets                                           |
+| API                   | Node.js, Express, Helmet                        | Validation, routes, security headers, and static asset serving                     |
+| Database              | PostgreSQL via `pg`                             | Durable workspace data and transactional updates                                   |
+| Containers            | Docker                                          | Repeatable frontend build and non-root production runtime                          |
+| Hosting               | Render Docker web service and Render PostgreSQL | HTTPS container hosting, managed relational storage, and environment secrets       |
+| Optional cloud target | Google Cloud Run, Cloud SQL, Secret Manager     | Retained alternative deployment configuration                                      |
+| Automation            | GitHub Actions                                  | API tests, production build, and Docker image validation                           |
 
 ## Architecture
 
@@ -125,14 +125,14 @@ See [architecture notes](docs/architecture.md) for data storage, concurrency, an
 
 ## Configuration
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `PORT` | `3001` | HTTP listening port; the Docker image defaults to `8080` |
-| `NODE_ENV` | unset | Set to `production` on the cloud host |
-| `DATABASE_URL` | unset | PostgreSQL connection string; required in production |
-| `WORKSPACE_PASSWORD` | unset | Shared workspace password; required in production |
-| `DATA_DIR` | `.data` | Local fallback storage directory |
-| `DATABASE_SCHEMA` | `cloudlaunch` | Validated PostgreSQL schema for application tables |
+| Variable             | Default       | Meaning                                                  |
+| -------------------- | ------------- | -------------------------------------------------------- |
+| `PORT`               | `3001`        | HTTP listening port; the Docker image defaults to `8080` |
+| `NODE_ENV`           | unset         | Set to `production` on the cloud host                    |
+| `DATABASE_URL`       | unset         | PostgreSQL connection string; required in production     |
+| `WORKSPACE_PASSWORD` | unset         | Shared workspace password; required in production        |
+| `DATA_DIR`           | `.data`       | Local fallback storage directory                         |
+| `DATABASE_SCHEMA`    | `cloudlaunch` | Validated PostgreSQL schema for application tables       |
 
 The production server refuses to start without a database URL and workspace password. The health endpoint and `/api/demo` sample-data endpoint are public; private workspace API routes require the configured password. The UI prompts for that password and stores it in the current tab’s session storage.
 
@@ -204,9 +204,13 @@ cloudlaunch/
 
 ## Screenshots
 
-| Desktop light | Mobile dark |
-| --- | --- |
+| Desktop light                                                   | Mobile dark                                                 |
+| --------------------------------------------------------------- | ----------------------------------------------------------- |
 | ![Desktop light theme](docs/screenshots/live-desktop-light.jpg) | ![Mobile dark theme](docs/screenshots/live-mobile-dark.jpg) |
+
+![Project workbook](docs/screenshots/live-workbook.jpg)
+
+![Release journal](docs/screenshots/live-journal.jpg)
 
 ![Live Render deployment dashboard](docs/screenshots/render-dashboard.jpg)
 

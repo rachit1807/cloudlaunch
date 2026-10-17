@@ -34,3 +34,7 @@ Live URL: [cloudlaunch-rachit.onrender.com](https://cloudlaunch-rachit.onrender.
 - Render’s free web service sleeps when idle and shares workspace free-hour limits. The existing free PostgreSQL instance expires on 9 November 2026 unless upgraded.
 
 Live screenshots are stored in `docs/screenshots/live-*`; local design captures remain separately named. Secrets are not included in screenshots or repository files.
+
+## Interface redesign verification
+
+Verified the live project index, project workbook, release journal, and both themes after the redesign. On a 390px mobile viewport, document width and scroll width both measured 390px. Local owner login and project form were checked; API integration tests and production build passed. Public sample data remains isolated from the private workspace.
