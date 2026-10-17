@@ -1,87 +1,57 @@
-# Deploy CloudLaunch to Google Cloud
+# Render deployment
 
-## Prerequisites
+## Deployed configuration
 
-- A Google Cloud account with two-step verification enabled.
-- A project with billing enabled and permission to deploy Cloud Run, use Cloud Build, provision Cloud SQL, and manage the necessary service identities.
-- Google Cloud CLI authenticated with `gcloud auth login`.
-- Node.js 24 and npm.
+- Service: `cloudlaunch-rachit`, free Docker web service, Singapore.
+- Source: `rachit1807/cloudlaunch`, `main` branch.
+- Build: multi-stage root Dockerfile; non-root Node.js 24 runtime.
+- Health path: `/api/health`, which checks PostgreSQL connectivity.
+- Secrets: Render resolves the existing database connection and generates `WORKSPACE_PASSWORD` through the Blueprint.
+- Storage: existing `teamhub-rbac-db` database, isolated `cloudlaunch.workspace` table.
+- Deploy source of truth: root `render.yaml`.
 
-Cloud SQL is a managed database and may incur charges even when Cloud Run is idle. Review the project budget before provisioning. This guide does not create resources automatically.
+## Reproduce in your own account
 
-## 1. Prepare the cloud project
+1. Fork the repository and configure a PostgreSQL database in the same Render region as the web service.
+2. Update `render.yaml` to reference your database’s actual name and your repository URL. Do not reuse someone else’s database resource name.
+3. Create a Blueprint from the repository. Review the plan and confirm the service is `free` before deploying.
+4. Render validates the Blueprint, builds the Dockerfile, resolves environment secrets, and starts the app.
+5. Retrieve the generated workspace password in Render’s Environment page. Do not commit it or the database URL.
+6. Open the live URL, unlock the workspace, and complete the checks below.
 
-Select the intended project and enable Cloud Run, Cloud Build, Artifact Registry, Cloud SQL Admin, and Secret Manager APIs. Choose one region for the app and database, for example `asia-south1`.
+The local Render CLI is not installed; the deployment configuration was validated by Render’s Dashboard planning flow before deployment.
 
-In Cloud SQL, create a PostgreSQL instance, database named `cloudlaunch`, and a dedicated database user. Use a strong database password. Copy the instance connection name (`PROJECT:REGION:INSTANCE`). Keep database backups and recovery settings appropriate to the project. Avoid opening the database to all public IP addresses.
+## Storage separation
 
-## 2. Configure runtime access
+The workspace owner approved using an existing PostgreSQL instance because Render permits one free PostgreSQL instance per workspace. CloudLaunch explicitly qualifies every table query with its validated `DATABASE_SCHEMA` value. Its pool is limited to three connections. The application creates its own schema and table and does not query or modify TeamHub tables.
 
-Create a dedicated Cloud Run service account such as `cloudlaunch-runtime`. Grant it the Cloud SQL Client role. Follow your organization’s least-privilege policy for Cloud Build and source-deploy permissions; the deploying identity must be allowed to act as this runtime service account.
+Both apps share capacity, availability, credentials, and the database expiry date. Schema separation is not a security boundary between applications that use the same database role. A dedicated database role or separate instance is recommended for production.
 
-Create these two Secret Manager secrets:
+## Deployment automation
 
-| Secret | Content |
-| --- | --- |
-| `cloudlaunch-database-url` | PostgreSQL connection URL |
-| `cloudlaunch-workspace-password` | Strong shared workspace password |
+Normal changes pushed to `main` auto-deploy. For manual deployment, set `RENDER_SERVICE_ID` and `RENDER_API_KEY` in a secure shell, then run `./scripts/deploy.sh`.
 
-Grant the runtime service account Secret Manager Secret Accessor on those specific secrets. Do not put secret values in Git, shell history, screenshots, or the README.
+The script installs locked dependencies, tests the API, builds the frontend, creates one Render deploy, tracks that deploy to a terminal state, and checks the live database-backed health endpoint. Source must already be committed and pushed. The script does not read local changes into Render.
 
-For a Cloud SQL socket, the database URL takes this shape:
+## Live checks
 
-```text
-postgresql://USER:URL_ENCODED_PASSWORD@localhost/cloudlaunch?host=/cloudsql/PROJECT:REGION:INSTANCE
-```
+- Frontend and health endpoint respond over HTTPS.
+- Unauthenticated business API access is rejected.
+- Authenticated project creation, editing, search/filtering, readiness checks, and release recording work.
+- Data survives a fresh browser load and a new service deployment.
+- Mobile view has no horizontal overflow and theme switching works.
+- Recent runtime logs show successful startup without database errors.
 
-URL-encode special characters in the user/password portion. The script’s Cloud SQL attachment must exactly match the instance connection name. For another PostgreSQL provider, use that provider’s TLS and trust configuration; do not disable certificate verification.
+## Free-plan constraints
 
-## 3. Build and deploy
+The web service sleeps after 15 minutes without inbound traffic and may take about one minute to wake. Free instance hours and build resources are shared with the owner’s other Render services. The existing free PostgreSQL instance expires on 9 November 2026. Export workspace data before expiry; free PostgreSQL instances have no backups.
 
-From the repository root:
+No paid service or database upgrade was requested or configured. Additional workspace usage beyond included limits follows the account’s Render billing settings; this project is not an unlimited hosting guarantee.
 
-```bash
-export GCP_PROJECT_ID="your-project-id"
-export GCP_REGION="asia-south1"
-export CLOUD_SQL_INSTANCE="your-project-id:asia-south1:your-instance"
-export SERVICE_ACCOUNT="cloudlaunch-runtime@your-project-id.iam.gserviceaccount.com"
-./scripts/deploy.sh
-```
+[Render free-plan limits](https://render.com/docs/free)
 
-Optional overrides: `SERVICE_NAME`, `DATABASE_SECRET`, and `PASSWORD_SECRET`. These are resource names, not secret values.
+## Why Google Cloud was replaced
 
-The script deploys the source using Cloud Build and the repository Dockerfile. Cloud Run exposes port 8080, attaches the Cloud SQL instance, and resolves the two secret versions into environment variables. Public HTTP access permits the interface and health endpoint to load; the shared workspace password protects business data routes. The service is capped at two instances.
+Google Cloud deployment was attempted, but billing activation presented a ₹15,000 payment request during account setup. To keep the student project within a zero-cost hosting budget, Render was selected instead. The amount is described as the payment request shown during setup; it is not claimed to be the cost of this application or a confirmed charge.
 
-The runtime creates the table and initial workspace on its first successful database connection. A fresh production workspace is empty. Existing local development data is not automatically uploaded.
-
-## 4. Verify the live application
-
-1. Open the actual Cloud Run service URL and unlock the workspace.
-2. Create a temporary project and update its description.
-3. Refresh the page and confirm the saved project remains.
-4. Restart/redeploy the service and confirm the project still exists in PostgreSQL.
-5. Test search, filters, mobile navigation, and both themes.
-6. Add a verified HTTPS URL, finish the readiness checklist, save, and record a test release.
-7. Confirm duplicate versions are rejected and delete the temporary project after checking its release history.
-8. Run `node scripts/smoke.mjs https://ACTUAL_SERVICE_URL`.
-
-The smoke script checks both frontend delivery and the database-backed health endpoint. It does not replace the authenticated user-flow checks above.
-
-## 5. Submission evidence
-
-After success, replace README deployment status with the verified URL. Save redacted screenshots of Cloud Run’s active revision, Cloud SQL status, and the live application under `docs/screenshots/`. Keep secret values, database connection strings, account identifiers, and billing details out of screenshots.
-
-## Troubleshooting
-
-- **Google Cloud access blocked:** enable two-step verification in the Google Account security settings, then refresh the console.
-- **Service does not become ready:** check Cloud Run logs, required secrets, database connectivity, and port 8080.
-- **Cloud SQL connection failure:** verify the exact instance connection name, attachment, runtime service identity, Cloud SQL Client role, database user, and socket URL.
-- **Secret permission failure:** grant the runtime identity access on the relevant secret and redeploy.
-- **401 from the API:** unlock the workspace with the production password. The health endpoint is intentionally public.
-- **429 from the API:** wait a minute after repeated invalid password attempts.
-
-## Official references
-
-- [Cloud Run and Cloud SQL PostgreSQL](https://docs.cloud.google.com/sql/docs/postgres/connect-instance-cloud-run)
-- [Configure secrets for Cloud Run](https://docs.cloud.google.com/run/docs/configuring/services/secrets)
-- [Cloud Run deployment command](https://docs.cloud.google.com/sdk/gcloud/reference/run/deploy)
+Google Cloud instructions remain in [google-cloud.md](google-cloud.md) and `scripts/deploy-gcp.sh` for future use. This deployment is on Render, which is also a cloud platform; it is not represented as an AWS, Google Cloud, or Azure deployment.

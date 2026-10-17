@@ -10,10 +10,15 @@ const initial = () => ({
 export async function createStore() {
   let pool;
   const schema = process.env.DATABASE_SCHEMA || "cloudlaunch";
-  if (!/^[a-z_][a-z0-9_]{0,62}$/.test(schema)) throw new Error("Invalid DATABASE_SCHEMA");
+  if (!/^[a-z_][a-z0-9_]{0,62}$/.test(schema))
+    throw new Error("Invalid DATABASE_SCHEMA");
   const table = `"${schema}".workspace`;
   if (process.env.DATABASE_URL) {
-    pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3, connectionTimeoutMillis: 5000 });
+    pool = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 3,
+      connectionTimeoutMillis: 5000,
+    });
     await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
     await pool.query(
       `CREATE TABLE IF NOT EXISTS ${table} (id INTEGER PRIMARY KEY, data JSONB NOT NULL)`,

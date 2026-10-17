@@ -23,11 +23,18 @@ Deploying a Web Application to a Cloud Platform
 
 ![CloudLaunch desktop dashboard in dark mode](docs/screenshots/desktop-dark.jpg)
 
-## Deployment status
+## Deployment
 
-The application is built and tested locally. Google Cloud Run and Cloud SQL deployment files are included. **A public live URL is pending Google Cloud billing activation and provisioning.** A local screenshot does not represent a live cloud deployment.
+**Live application:** [cloudlaunch-rachit.onrender.com](https://cloudlaunch-rachit.onrender.com)  
+**Health endpoint:** [/api/health](https://cloudlaunch-rachit.onrender.com/api/health)
+
+The app runs on a free Docker web service with managed PostgreSQL in Singapore.
 
 Repository: [rachit1807/cloudlaunch](https://github.com/rachit1807/cloudlaunch)
+
+**Platform choice:** Google Cloud deployment was attempted, but billing activation presented a ₹15,000 payment request during account setup. To keep this student project within a zero-cost hosting budget, the application was deployed on Render instead. The Google Cloud deployment configuration remains available for future use.
+
+Render is a cloud hosting platform. This is a substitution for the assignment’s named AWS/Google Cloud/Azure targets, so acceptance remains at the reviewer’s discretion.
 
 ## Features
 
@@ -98,19 +105,19 @@ Deleting a project also deletes its associated release history. The interface as
 | API | Node.js, Express, Helmet | Validation, routes, security headers, and static asset serving |
 | Database | PostgreSQL via `pg` | Durable workspace data and transactional updates |
 | Containers | Docker | Repeatable frontend build and non-root production runtime |
-| Cloud target | Google Cloud Run, Cloud SQL, Secret Manager | Container hosting, managed PostgreSQL, and runtime secrets |
+| Hosting | Render Docker web service and Render PostgreSQL | HTTPS container hosting, managed relational storage, and environment secrets |
+| Optional cloud target | Google Cloud Run, Cloud SQL, Secret Manager | Retained alternative deployment configuration |
 | Automation | GitHub Actions | API tests, production build, and Docker image validation |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Browser[React workspace] -->|HTTPS / same origin| Run[Cloud Run: Express + static frontend]
-    Run -->|Cloud SQL socket| SQL[(Cloud SQL PostgreSQL)]
-    Secrets[Secret Manager] -->|Runtime environment| Run
-    Git[GitHub repository] --> CI[Tests + build + Docker validation]
-    Source[Deploy script + source] --> Build[Cloud Build: Dockerfile]
-    Build --> Run
+    Browser[React workspace] -->|HTTPS / same origin| Render[Render: Docker / Express + frontend]
+    Render -->|Private network| SQL[(Render PostgreSQL: cloudlaunch schema)]
+    Env[Render environment variables] --> Render
+    Git[GitHub main] --> CI[Tests + build + Docker validation]
+    Git -->|Auto deploy| Render
 ```
 
 See [architecture notes](docs/architecture.md) for data storage, concurrency, and security decisions.
@@ -124,21 +131,35 @@ See [architecture notes](docs/architecture.md) for data storage, concurrency, an
 | `DATABASE_URL` | unset | PostgreSQL connection string; required in production |
 | `WORKSPACE_PASSWORD` | unset | Shared workspace password; required in production |
 | `DATA_DIR` | `.data` | Local fallback storage directory |
+| `DATABASE_SCHEMA` | `cloudlaunch` | Validated PostgreSQL schema for application tables |
 
 The production server refuses to start without a database URL and workspace password. The health endpoint is public; all other API routes require the configured password. The UI prompts for that password and stores it in the current tab’s session storage.
 
-## Google Cloud deployment
+## Render deployment
 
-Follow the complete [deployment guide](docs/deployment.md) to provision Cloud SQL, configure a runtime service account and Secret Manager, and publish to Cloud Run.
+The version-controlled [render.yaml](render.yaml) defines a free Docker web service in Singapore with `/api/health` readiness checks, automatic deploys from `main`, an existing database reference, and a generated workspace password.
+
+The deployed app uses the existing `teamhub-rbac-db` PostgreSQL instance with the owner’s permission. All application queries target `cloudlaunch.workspace`; TeamHub’s tables are not changed. This provides schema separation, not separate database credentials or separate resource capacity.
+
+For your own workspace, change the database reference to a database you own before applying the Blueprint. See the [Render deployment guide](docs/deployment.md).
+
+For a manual redeploy after committing and pushing code:
 
 ```bash
-export GCP_PROJECT_ID="your-project-id"
-export CLOUD_SQL_INSTANCE="your-project-id:asia-south1:your-instance"
-export SERVICE_ACCOUNT="cloudlaunch-runtime@your-project-id.iam.gserviceaccount.com"
+export RENDER_SERVICE_ID="your-service-id"
+# Set RENDER_API_KEY securely in your shell; never commit it.
 ./scripts/deploy.sh
 ```
 
-The script checks prerequisites, runs tests and the production build, deploys from the multi-stage Dockerfile through Cloud Build, attaches Cloud SQL, injects secret references, and checks the returned live URL. It assumes cloud infrastructure and IAM permissions have already been configured. Provisioning managed cloud resources may incur charges; review the project’s billing and budget settings before creating them.
+The script runs validation, triggers one deploy through Render’s API, waits for its status to become live, and checks database health. Normal pushes already trigger auto-deploy; avoid triggering a duplicate while one is running.
+
+**Free-plan limits:** the web service sleeps after 15 idle minutes and may take about a minute to wake up. This workspace shares 750 free instance hours monthly across its free web services. The shared database expires on **9 November 2026** unless upgraded, so export data before then. Render’s free database has no backups. [Render free-plan documentation](https://render.com/docs/free)
+
+The generated workspace password is available to the owner in the service’s Render **Environment** page under `WORKSPACE_PASSWORD`. It is intentionally not published in this repository. Provide reviewer access privately if required.
+
+### Optional Google Cloud setup
+
+The original Google Cloud script is preserved as `scripts/deploy-gcp.sh`. Its prerequisites and configuration are documented in [the Google Cloud guide](docs/google-cloud.md). No Google Cloud services were provisioned.
 
 ## Validation
 
@@ -161,13 +182,16 @@ cloudlaunch/
 │   └── server/             # Express API and PostgreSQL/file storage
 ├── public/                 # Favicon
 ├── scripts/
-│   ├── deploy.sh           # Google Cloud Run deployment
+│   ├── deploy.sh           # Render deployment entry point
+│   ├── deploy-render.mjs   # Render API deploy and readiness verification
+│   ├── deploy-gcp.sh       # Optional Google Cloud Run deployment
 │   └── smoke.mjs           # Frontend and database health check
 ├── tests/                  # API integration tests
 ├── docs/                   # Architecture, deployment, API, screenshots
 ├── .github/workflows/      # Continuous validation
 ├── .env.example
 ├── .dockerignore
+├── render.yaml             # Render Blueprint
 ├── Dockerfile
 ├── index.html
 ├── package.json
@@ -181,7 +205,7 @@ cloudlaunch/
 | --- | --- |
 | ![Desktop light theme](docs/screenshots/desktop-light.jpg) | ![Mobile light theme](docs/screenshots/mobile-light.jpg) |
 
-Screenshots show a local development workspace. Cloud infrastructure screenshots and the live application link should be added after the Google Cloud deployment is verified.
+Local design previews are shown above. Verified Render deployment screenshots are included after live checks.
 
 ## Scope
 
