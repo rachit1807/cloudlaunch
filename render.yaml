@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: cloudlaunch-rachit
+    runtime: docker
+    plan: free
+    region: singapore
+    repo: https://github.com/rachit1807/cloudlaunch
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_SCHEMA
+        value: cloudlaunch
+      - key: DATABASE_URL
+        fromDatabase:
+          name: teamhub-rbac-db
+          property: connectionString
+      - key: WORKSPACE_PASSWORD
+        generateValue: true

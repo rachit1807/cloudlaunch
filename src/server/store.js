@@ -9,13 +9,17 @@ const initial = () => ({
 });
 export async function createStore() {
   let pool;
+  const schema = process.env.DATABASE_SCHEMA || "cloudlaunch";
+  if (!/^[a-z_][a-z0-9_]{0,62}$/.test(schema)) throw new Error("Invalid DATABASE_SCHEMA");
+  const table = `"${schema}".workspace`;
   if (process.env.DATABASE_URL) {
-    pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+    pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3, connectionTimeoutMillis: 5000 });
+    await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
     await pool.query(
-      "CREATE TABLE IF NOT EXISTS workspace (id INTEGER PRIMARY KEY, data JSONB NOT NULL)",
+      `CREATE TABLE IF NOT EXISTS ${table} (id INTEGER PRIMARY KEY, data JSONB NOT NULL)`,
     );
     await pool.query(
-      "INSERT INTO workspace(id,data) VALUES(1,$1) ON CONFLICT DO NOTHING",
+      `INSERT INTO ${table}(id,data) VALUES(1,$1) ON CONFLICT DO NOTHING`,
       [initial()],
     );
   }
@@ -33,7 +37,7 @@ export async function createStore() {
   let queue = Promise.resolve();
   async function read() {
     if (pool)
-      return (await pool.query("SELECT data FROM workspace WHERE id=1")).rows[0]
+      return (await pool.query(`SELECT data FROM ${table} WHERE id=1`)).rows[0]
         .data;
     return JSON.parse(await readFile(file, "utf8"));
   }
@@ -45,11 +49,11 @@ export async function createStore() {
           await client.query("BEGIN");
           const data = (
             await client.query(
-              "SELECT data FROM workspace WHERE id=1 FOR UPDATE",
+              `SELECT data FROM ${table} WHERE id=1 FOR UPDATE`,
             )
           ).rows[0].data;
           const result = fn(data);
-          await client.query("UPDATE workspace SET data=$1 WHERE id=1", [data]);
+          await client.query(`UPDATE ${table} SET data=$1 WHERE id=1`, [data]);
           await client.query("COMMIT");
           return result;
         } catch (e) {
