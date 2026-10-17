@@ -72,14 +72,18 @@ function App() {
     [password, setPassword] = useState(
       sessionStorage.getItem("cloudlaunch-password") || "",
     ),
+    [demo, setDemo] = useState(sessionStorage.getItem("cloudlaunch-demo") === "true"),
     [locked, setLocked] = useState(false),
     [health, setHealth] = useState(null);
   async function api(url, options = {}) {
+    if (demo && options.method && options.method !== "GET")
+      throw Error("Demo is read-only. Sign in as the owner to make changes.");
     const response = await fetch("/api" + url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        "X-Workspace-Password": password,
+        "X-Workspace-Password": demo ? "" : password,
+        "X-Demo-Mode": String(demo),
         ...options.headers,
       },
     });
@@ -93,7 +97,7 @@ function App() {
   }
   async function load() {
     try {
-      const d = await api("/workspace");
+      const d = await api(demo ? "/demo" : "/workspace");
       setData(d);
       setLocked(false);
       setError("");
@@ -107,7 +111,7 @@ function App() {
       .then((r) => r.json())
       .then(setHealth)
       .catch(() => {});
-  }, [password]);
+  }, [password, demo]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("cloudlaunch-theme", theme);
@@ -134,6 +138,7 @@ function App() {
     setMobile(false);
   }
   function open(project) {
+    if (demo) { setToast("Demo is read-only. Owner login is required to edit projects."); return; }
     setError("");
     setForm(project ? { ...project } : { ...blank });
     setModal(project ? "edit" : "create");
@@ -215,13 +220,18 @@ function App() {
         >
           <span className="eyebrow">YOUR WORKSPACE, SECURED</span>
           <h1>Welcome back.</h1>
-          <p>Enter the workspace password to continue.</p>
+          <p>Explore the public demo without a password, or sign in to manage your private workspace.</p>
+          <button type="button" className="demo-entry" onClick={() => {
+            sessionStorage.setItem("cloudlaunch-demo", "true");
+            setDemo(true);
+          }}>Explore demo <ArrowUpRight size={16} /></button>
+          <p className="muted">Read-only sample projects. No signup needed.</p>
           <label>
-            Workspace password
+            Owner workspace password
             <input autoFocus type="password" name="password" required />
           </label>
           <button className="primary">
-            Unlock workspace <ArrowRight size={16} />
+            Owner login <ArrowRight size={16} />
           </button>
           {error && (
             <p role="alert" className="error">
@@ -326,7 +336,7 @@ function App() {
           <div className="top-actions">
             <span className="connection">
               <i />
-              {health ? "Connected" : "Connecting"}
+              {demo ? "Demo mode" : health ? "Connected" : "Connecting"}
             </span>
             <button
               className="icon-button"
@@ -343,6 +353,9 @@ function App() {
           </div>
         </header>
         <div className="content">
+          {demo && <div className="demo-banner" role="status"><span><b>Explore demo</b> · Read-only sample data. Your private workspace is protected.</span><button onClick={() => {
+            sessionStorage.removeItem("cloudlaunch-demo"); setDemo(false); setData(null); setLocked(true); setError(""); setPage("Overview");
+          }}>Owner login <ArrowRight size={16} /></button></div>}
           <div className="page-heading">
             <div>
               <div className="eyebrow">YOUR LAUNCHPAD</div>
@@ -753,6 +766,7 @@ function App() {
                     Workspace name
                     <input
                       name="name"
+                      disabled={demo}
                       defaultValue={data.settings.name}
                       required
                       maxLength={60}
@@ -762,12 +776,13 @@ function App() {
                     Your name
                     <input
                       name="owner"
+                      disabled={demo}
                       defaultValue={data.settings.owner}
                       required
                       maxLength={60}
                     />
                   </label>
-                  <button className="primary" disabled={busy}>
+                  <button className="primary" disabled={busy || demo}>
                     Save changes <Check size={16} />
                   </button>
                 </form>
@@ -806,7 +821,7 @@ function App() {
                     <b>Database</b>
                     <small>Storage connected to this workspace</small>
                   </div>
-                  <span className="pill">{health?.database || "Checking"}</span>
+                  <span className="pill">{demo ? "Sample data" : health?.database || "Checking"}</span>
                 </div>
                 {password && (
                   <button
@@ -875,7 +890,7 @@ function App() {
           {modal === "delete" ? (
             <div className="dialog-actions">
               <button onClick={() => setModal("edit")}>Cancel</button>
-              <button className="danger" disabled={busy} onClick={remove}>
+              <button className="danger" disabled={busy || demo} onClick={remove}>
                 Delete project
               </button>
             </div>
@@ -902,7 +917,7 @@ function App() {
                   placeholder="What changed in this release?"
                 />
               </label>
-              <button className="primary" disabled={busy}>
+              <button className="primary" disabled={busy || demo}>
                 Record release <Check size={16} />
               </button>
             </form>
@@ -1008,7 +1023,7 @@ function App() {
                 <button type="button" onClick={() => setModal(null)}>
                   Cancel
                 </button>
-                <button className="primary" disabled={busy}>
+                <button className="primary" disabled={busy || demo}>
                   {busy
                     ? "Saving…"
                     : modal === "create"

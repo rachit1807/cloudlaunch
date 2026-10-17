@@ -98,3 +98,29 @@ test("project lifecycle, release validation, persistence, and password protectio
     delete process.env.DATA_DIR;
   }
 });
+
+test("public demo is isolated and rejects writes even with owner credentials", async () => {
+  const previous = process.env.WORKSPACE_PASSWORD;
+  process.env.WORKSPACE_PASSWORD = "private-test-password";
+  let reads = 0, writes = 0;
+  const server = createApp({ read: async () => { reads++; return { private: true }; }, update: async () => { writes++; } }).listen(0, "127.0.0.1");
+  await new Promise(resolve => server.once("listening", resolve));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  try {
+    const response = await fetch(base + "/demo");
+    assert.equal(response.status, 200);
+    const demo = await response.json();
+    assert.equal(demo.projects.length, 2);
+    assert.equal(demo.settings.name, "Demo workspace");
+    assert.equal(reads, 0);
+    assert.equal((await fetch(base + "/workspace")).status, 401);
+    for (const [route, method] of [["/projects", "POST"], ["/projects/demo-cloudlaunch", "PATCH"], ["/projects/demo-cloudlaunch", "DELETE"], ["/projects/demo-cloudlaunch/releases", "POST"], ["/settings", "PATCH"]]) {
+      assert.equal((await fetch(base + route, { method, headers: { "X-Demo-Mode": "true", "X-Workspace-Password": "private-test-password" } })).status, 403);
+    }
+    assert.equal(writes, 0);
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+    if (previous === undefined) delete process.env.WORKSPACE_PASSWORD;
+    else process.env.WORKSPACE_PASSWORD = previous;
+  }
+});

@@ -134,7 +134,7 @@ See [architecture notes](docs/architecture.md) for data storage, concurrency, an
 | `DATA_DIR` | `.data` | Local fallback storage directory |
 | `DATABASE_SCHEMA` | `cloudlaunch` | Validated PostgreSQL schema for application tables |
 
-The production server refuses to start without a database URL and workspace password. The health endpoint is public; all other API routes require the configured password. The UI prompts for that password and stores it in the current tab’s session storage.
+The production server refuses to start without a database URL and workspace password. The health endpoint and `/api/demo` sample-data endpoint are public; private workspace API routes require the configured password. The UI prompts for that password and stores it in the current tab’s session storage.
 
 ## Render deployment
 
@@ -156,7 +156,9 @@ The script runs validation, triggers one deploy through Render’s API, waits fo
 
 **Free-plan limits:** the web service sleeps after 15 idle minutes and may take about a minute to wake up. This workspace shares 750 free instance hours monthly across its free web services. The shared database expires on **9 November 2026** unless upgraded, so export data before then. Render’s free database has no backups. [Render free-plan documentation](https://render.com/docs/free)
 
-The generated workspace password is available to the owner in the service’s Render **Environment** page under `WORKSPACE_PASSWORD`. It is intentionally not published in this repository. Provide reviewer access privately if required.
+The generated workspace password is available to the owner in the service’s Render **Environment** page under `WORKSPACE_PASSWORD`. It is intentionally not published in this repository. Visitors and reviewers should choose **Explore demo** on the login screen. It requires no password and displays isolated, read-only sample projects and releases. It never reads private workspace data or saves changes. Search, filters, navigation, themes, and sample-data export remain available.
+
+**Keep `WORKSPACE_PASSWORD` private.** Do not publish it in the README, source code, screenshots, issues, or public submission notes. Owner login grants editing and deletion access to the private workspace; it is not a visitor credential. If the password has been disclosed, rotate it in Render’s Environment settings and redeploy. Individual visitor accounts are not provided.
 
 ### Optional Google Cloud setup
 

@@ -1619,3 +1619,8 @@ label small {
     scroll-behavior: auto !important;
   }
 }
+
+.demo-entry { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; margin-top: 20px; }
+.demo-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px; margin-bottom: 24px; border: 1px solid #819d4e; border-radius: 12px; }
+.demo-banner button { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+button:disabled, input:disabled { opacity: .55; cursor: not-allowed; }

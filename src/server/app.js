@@ -40,8 +40,18 @@ export function createApp(store) {
     await store.read();
     res.json({ status: "ok", database: store.mode });
   });
+  // Public sample data is separate from the private workspace and database.
+  app.get("/api/demo", (req, res) => res.json({
+    settings: { name: "Demo workspace", owner: "Demo visitor" },
+    projects: [{ id: "demo-cloudlaunch", name: "CloudLaunch", description: "A sample project showing readiness checklists and release history. Explore freely; your private workspace stays separate.", stack: "React", environment: "Production", url: "https://cloudlaunch-rachit.onrender.com", createdAt: "2026-10-18T00:00:00Z", status: "Released", checklist: [true, true, true, true] },
+    { id: "demo-portfolio", name: "Portfolio", description: "A personal portfolio preparing for its first release.", stack: "Next.js", environment: "Preview", url: "", createdAt: "2026-10-17T00:00:00Z", status: "In progress", checklist: [true, true, false, false] }],
+    deployments: [{ id: "demo-release", projectId: "demo-cloudlaunch", projectName: "CloudLaunch", environment: "Production", url: "https://cloudlaunch-rachit.onrender.com", version: "v1.0.0", notes: "Sample release record for the public demo.", at: "2026-10-18T00:00:00Z" }],
+    activity: [{ id: "demo-activity", text: "Recorded CloudLaunch v1.0.0", at: "2026-10-18T00:00:00Z" }]
+  }));
   const attempts = new Map();
   app.use("/api", (req, res, next) => {
+    if (req.headers["x-demo-mode"] === "true")
+      return res.status(403).json({ error: "Demo is read-only. Owner login is required to edit the private workspace." });
     const password = process.env.WORKSPACE_PASSWORD;
     if (!password) return next();
     const key = req.ip,
