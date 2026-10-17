@@ -219,15 +219,13 @@ function App() {
     setToast("Workspace exported");
   }
   const themeButton = (
-    <button
-      className="icon-button"
-      aria-label={
-        theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+    <ThemeToggle
+      theme={theme}
+      onToggle={() =>
+        setTheme((value) => (value === "dark" ? "light" : "dark"))
       }
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-    >
-      {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-    </button>
+      compact
+    />
   );
   if (locked)
     return (
@@ -806,12 +804,12 @@ function App() {
                   <b>Appearance</b>
                   <small>Saved on this device</small>
                 </div>
-                <button
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                >
-                  {theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}{" "}
-                  {theme === "dark" ? "Dark" : "Light"}
-                </button>
+                <ThemeToggle
+                  theme={theme}
+                  onToggle={() =>
+                    setTheme((value) => (value === "dark" ? "light" : "dark"))
+                  }
+                />
               </div>
               <div className="setting-row">
                 <div>
@@ -1062,6 +1060,22 @@ function App() {
         </div>
       )}
     </>
+  );
+}
+function ThemeToggle({ theme, onToggle, compact = false }) {
+  const next = theme === "dark" ? "light" : "dark";
+  const label = `Switch to ${next} theme`;
+  return (
+    <button
+      type="button"
+      className={compact ? "icon-button" : undefined}
+      aria-label={label}
+      title={label}
+      onClick={onToggle}
+    >
+      {next === "light" ? <Sun size={18} /> : <Moon size={18} />}
+      {!compact && label}
+    </button>
   );
 }
 function Logo() {
