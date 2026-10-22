@@ -106,7 +106,7 @@ Deleting a project also deletes its associated release history. The interface as
 | API                   | Node.js, Express, Helmet                        | Validation, routes, security headers, and static asset serving                     |
 | Database              | PostgreSQL via `pg`                             | Durable workspace data and transactional updates                                   |
 | Containers            | Docker                                          | Repeatable frontend build and non-root production runtime                          |
-| Hosting               | Render Docker web service and Render PostgreSQL | HTTPS container hosting, managed relational storage, and environment secrets       |
+| Hosting               | Render Docker web service and Neon PostgreSQL | HTTPS container hosting, managed relational storage, and environment secrets       |
 | Optional cloud target | Google Cloud Run, Cloud SQL, Secret Manager     | Retained alternative deployment configuration                                      |
 | Automation            | GitHub Actions                                  | API tests, production build, and Docker image validation                           |
 
@@ -115,7 +115,7 @@ Deleting a project also deletes its associated release history. The interface as
 ```mermaid
 flowchart LR
     Browser[React workspace] -->|HTTPS / same origin| Render[Render: Docker / Express + frontend]
-    Render -->|Private network| SQL[(Render PostgreSQL: cloudlaunch schema)]
+    Render -->|TLS| SQL[(Neon PostgreSQL: cloudlaunch schema)]
     Env[Render environment variables] --> Render
     Git[GitHub main] --> CI[Tests + build + Docker validation]
     Git -->|Auto deploy| Render
@@ -138,11 +138,11 @@ The production server refuses to start without a database URL and workspace pass
 
 ## Render deployment
 
-The version-controlled [render.yaml](render.yaml) defines a free Docker web service in Singapore with `/api/health` readiness checks, automatic deploys from `main`, an existing database reference, and a generated workspace password.
+The version-controlled [render.yaml](render.yaml) defines a free Docker web service in Singapore with `/api/health` readiness checks, automatic deploys from `main`, a manually supplied Neon database URL, and a generated workspace password.
 
-The deployed app uses the existing `teamhub-rbac-db` PostgreSQL instance with the owner’s permission. All application queries target `cloudlaunch.workspace`; TeamHub’s tables are not changed. This provides schema separation, not separate database credentials or separate resource capacity.
+The deployed app uses its own Neon PostgreSQL 16 project in Singapore, with a dedicated `cloudlaunch` database and database role. All application queries target `cloudlaunch.workspace`. It no longer shares TeamHub’s database or depends on the original Render database expiry.
 
-For your own workspace, change the database reference to a database you own before applying the Blueprint. See the [Render deployment guide](docs/deployment.md).
+For your own workspace, supply your own TLS-enabled PostgreSQL connection string as `DATABASE_URL` when applying the Blueprint. See the [Render deployment guide](docs/deployment.md).
 
 For a manual redeploy after committing and pushing code:
 
@@ -154,7 +154,7 @@ export RENDER_SERVICE_ID="your-service-id"
 
 The script runs validation, triggers one deploy through Render’s API, waits for its status to become live, and checks database health. Normal pushes already trigger auto-deploy; avoid triggering a duplicate while one is running.
 
-**Free-plan limits:** the web service sleeps after 15 idle minutes and may take about a minute to wake up. This workspace shares 750 free instance hours monthly across its free web services. The shared database expires on **9 November 2026** unless upgraded, so export data before then. Render’s free database has no backups. [Render free-plan documentation](https://render.com/docs/free)
+**Free-plan limits:** the web service sleeps after 15 idle minutes and may take about a minute to wake up. This workspace shares 750 free instance hours monthly across its free web services. The Neon production database has **no scheduled expiry**. Free-plan storage, compute, transfer and recovery limits still apply; keep independent backups. No provider guarantees unlimited or perpetual free hosting. [Render free-plan documentation](https://render.com/docs/free)
 
 The generated workspace password is available to the owner in the service’s Render **Environment** page under `WORKSPACE_PASSWORD`. It is intentionally not published in this repository. Visitors and reviewers should choose **Explore demo** on the login screen. It requires no password and displays isolated, read-only sample projects and releases. It never reads private workspace data or saves changes. Search, filters, navigation, themes, and sample-data export remain available.
 
